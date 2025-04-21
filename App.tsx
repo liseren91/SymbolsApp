@@ -5,127 +5,61 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import React, { useEffect } from 'react';
+import AppNavigator from './src/navigation/AppNavigator';
+// Import gesture handler -- must be at the top
+import 'react-native-gesture-handler'; 
+import geolocationService from './src/services/GeolocationService';
+import roleService from './src/services/RoleService';
+import { Alert } from 'react-native';
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  useEffect(() => {
+    // Load points and start watching location when the app mounts
+    const initializeApp = async () => {
+      try {
+        // Инициализируем сервис ролей
+        await roleService.initialize();
+        console.log('Role service initialized');
 
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the recommendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+        // Проверяем разрешение на геолокацию
+        const hasPermission = await geolocationService.hasLocationPermission();
+        if (hasPermission) {
+          await geolocationService.initialize(); // Load settings and points
+          // Запускаем отслеживание местоположения только в режиме гостя
+          if (roleService.isGuest()) {
+            geolocationService.startWatching(); // Start background tracking for guest mode
+            console.log('Started location tracking for guest mode');
+          } else if (roleService.isAdmin() && !roleService.getAdminAuthStatus()) {
+            // Если роль админа, но статус аутентификации не подтвержден,
+            // сбрасываем роль на гостя для безопасности
+            await roleService.logoutAdmin();
+            console.log('Admin authentication status invalid, reset to guest');
+            geolocationService.startWatching(); // Start tracking for reset guest
+          }
+        } else {
+          // Handle permission denial - maybe show an alert
+          Alert.alert(
+            'Location Permission Required',
+            'This app needs location access to function correctly. Please grant permission in settings.'
+          );
+          console.error('Location permission denied by user.');
+        }
+      } catch (error) {
+        console.error('Error initializing app:', error);
+      }
+    };
 
-  return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
-  );
+    initializeApp();
+
+    // Stop watching when the app unmounts
+    return () => {
+      geolocationService.stopWatching();
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  return <AppNavigator />;
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
