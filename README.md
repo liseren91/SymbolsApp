@@ -1,97 +1,215 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# SymbolsApp
 
-# Getting Started
+SymbolsApp is a React Native application that allows users to discover points of interest based on their geographic location. The app has two roles: Guest mode for discovering hidden points of interest as you move around, and Admin mode for managing these points on the map.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features
 
-## Step 1: Start Metro
+- **Dual Role System**:
+  - **Guest Mode**: Explore the city and receive notifications when approaching points of interest
+  - **Admin Mode**: Create, edit, and manage points on the map
+  
+- **Interactive Map**: Google Maps integration with real-time location tracking
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- **Points of Interest**: Each point has a name, coordinates, and a custom symbol
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Proximity Alerts**: Haptic feedback and on-screen alerts when near a point of interest
+
+- **Configurable Settings**: Adjust GPS update frequency and vibration patterns
+
+## Prerequisites
+
+- Node.js >= 18
+- React Native development environment set up ([React Native Environment Setup Guide](https://reactnative.dev/docs/environment-setup))
+- Xcode (for iOS)
+- Android Studio (for Android)
+- CocoaPods (for iOS dependencies)
+
+## Installation
+
+1. **Clone the repository**:
 
 ```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+git clone <repository-url>
+cd SymbolsApp
 ```
 
-## Step 2: Build and run your app
+2. **Install dependencies**:
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+```sh
+npm install
+# or
+yarn install
+```
+
+3. **iOS setup**:
+
+```sh
+cd ios
+bundle install
+bundle exec pod install
+cd ..
+```
+
+4. **Update Google Maps API key** (if needed):
+
+- For Android: Edit `android/app/src/main/AndroidManifest.xml` and update the `com.google.android.geo.API_KEY` value
+- For iOS: Edit `ios/SymbolsApp/AppDelegate.swift` and update the `GMSServices.provideAPIKey()` value
+
+## Running the App
+
+### iOS
+
+```sh
+npm run ios
+# or
+yarn ios
+```
+
+If building for first time:
+
+```sh
+cd ios
+bundle exec pod install
+cd ..
+npm run ios
+```
 
 ### Android
 
 ```sh
-# Using npm
 npm run android
-
-# OR using Yarn
+# or
 yarn android
 ```
 
-### iOS
+## App Structure
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```
+src/
+├── components/          # Reusable UI components
+├── navigation/          # Navigation configuration
+├── screens/             # Application screens
+│   ├── AddEditPointScreen.tsx
+│   ├── AlertScreen.tsx
+│   ├── MapScreen.tsx
+│   ├── RoleSelectionScreen.tsx
+│   └── SettingsScreen.tsx
+└── services/            # Core business logic
+    ├── GeolocationService.ts    # Location tracking
+    ├── GoogleSheetsService.ts   # Data integration
+    ├── RoleService.ts           # User roles management
+    ├── SettingsStorageService.ts # App settings
+    └── StorageService.ts        # Points of interest storage
 ```
 
-Then, and every time you update your native dependencies, run:
+## Usage Guide
+
+### Guest Mode
+
+1. Launch the app and select "Guest" mode
+2. Allow location permissions when prompted
+3. The map will show your current position
+4. Walk around - you'll receive haptic feedback and alerts when approaching points of interest
+5. Each point has a unique symbol
+
+### Admin Mode
+
+1. Launch the app and select "Admin" mode
+2. Enter the password when prompted: `master-flomaster2022`
+3. The map will display all configured points of interest
+4. To add a new point: 
+   - Tap the "Add New Point" button, or
+   - Long press on the map at the desired location
+5. To edit a point, tap on its marker
+6. To delete a point, select it and use the delete option
+
+### Settings
+
+Configure the app behavior in Settings:
+- GPS Update Interval: How frequently the app checks your location
+- Vibration Type: The haptic feedback style when discovering points
+
+## Troubleshooting
+
+### Location Not Working
+
+1. Ensure location permissions are granted
+2. Check that GPS/Location services are enabled on your device
+3. For Android, background location requires additional permissions
+
+### Build Errors
+
+#### iOS
+
+If you encounter build issues with react-native-maps:
 
 ```sh
+cd ios
+bundle exec pod install --repo-update
+cd ..
+```
+
+#### Android
+
+For Android SDK issues:
+- Open the project in Android Studio
+- Let Gradle sync complete
+- Build from Android Studio to identify specific errors
+
+## Data Management
+
+The app uses:
+- AsyncStorage for app settings and points of interest
+- Google Sheets for symbol descriptions (configured in GoogleSheetsService.ts)
+
+## Maintenance
+
+### Updating Dependencies
+
+```sh
+npm outdated
+npm update
+# Then for iOS
+cd ios
+bundle exec pod update
+cd ..
+```
+
+### Troubleshooting iOS Builds
+
+If you encounter iOS build issues with the message "react-native-maps-generated/ComponentDescriptors.h file not found":
+
+1. Clean the build folder:
+```sh
+cd ios
+xcodebuild clean
+cd ..
+```
+
+2. Reinstall pods:
+```sh
+cd ios
+pod deintegrate
 bundle exec pod install
+cd ..
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+3. Manually fix by editing the Podfile to ensure proper react-native-maps installation.
 
-```sh
-# Using npm
-npm run ios
+### Changing Google API Keys
 
-# OR using Yarn
-yarn ios
-```
+If you need to change Google API keys:
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+1. For Maps API (Android): Update in `android/app/src/main/AndroidManifest.xml`
+2. For Maps API (iOS): Update in `ios/SymbolsApp/AppDelegate.swift`
+3. For Google Sheets API: Update in `src/services/GoogleSheetsService.ts`
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## Security Notes
 
-## Step 3: Modify your app
+- Admin password is defined in `src/components/PasswordModal.tsx`
+- In a production app, you should implement more robust authentication
+- API keys should be stored securely using environment variables or a secure storage solution
 
-Now that you have successfully run the app, let's make changes!
+## License
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+[Your license information here]
