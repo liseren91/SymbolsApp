@@ -5,6 +5,7 @@ import { StorageService, PointOfInterest } from './StorageService'; // Import fr
 import * as NavigationService from '../navigation/NavigationService'; // Import NavigationService
 import ReactNativeHapticFeedback, { HapticFeedbackTypes } from "react-native-haptic-feedback"; // Import Haptic Feedback and type
 import { SettingsStorageService, AppSettings, DEFAULT_SETTINGS } from './SettingsStorageService'; // Import settings
+import googleSheetsService from './GoogleSheetsService'; // Import Google Sheets service
 // TODO: Import navigation functions to show AlertScreen
 // TODO: Import haptic feedback
 
@@ -139,8 +140,26 @@ class GeolocationService {
   // Load points from storage
   async loadPoints() { // Make async
       try {
-          this.pointsOfInterest = await StorageService.loadPoints();
-          console.log('[GeolocationService] Points loaded from storage:', this.pointsOfInterest);
+          // Load points from local storage
+          let localPoints = await StorageService.loadPoints();
+          console.log('[GeolocationService] Points loaded from local storage:', localPoints);
+          
+          // Try to load points from Google Sheets as well
+          try {
+              const sheetsPoints = googleSheetsService.getPointsOfInterest();
+              if (sheetsPoints && sheetsPoints.length > 0) {
+                  console.log('[GeolocationService] Points loaded from Google Sheets:', sheetsPoints.length);
+                  
+                  // Combine local points and Google Sheets points
+                  // Local points with same ID will be overwritten by Google Sheets points
+                  this.pointsOfInterest = [...localPoints, ...sheetsPoints];
+              } else {
+                  this.pointsOfInterest = localPoints;
+              }
+          } catch (sheetsError) {
+              console.error('[GeolocationService] Failed to load points from Google Sheets:', sheetsError);
+              this.pointsOfInterest = localPoints; // Fallback to local points only
+          }
       } catch (error) {
           console.error('[GeolocationService] Failed to load points:', error);
           this.pointsOfInterest = []; // Ensure it's an empty array on failure
