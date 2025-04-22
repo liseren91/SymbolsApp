@@ -46,11 +46,11 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
     let settings = RCTBundleURLProvider.sharedSettings()
     // For simulator, use localhost; for physical device, you might need your computer's IP
     // Uncomment and change the IP if running on a physical device
-    // settings.setDevelopmentServerHost("192.168.x.x:8081")
-    settings.setDevelopmentServerHost("localhost:8081")
+    // settings.jsLocation = "http://192.168.x.x:8081"
+    settings.jsLocation = "http://localhost:8081"
     return settings.jsBundleURL(forBundleRoot: "index")
 #else
-    Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif
   }
 }

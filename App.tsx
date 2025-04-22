@@ -11,6 +11,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import 'react-native-gesture-handler'; 
 import geolocationService from './src/services/GeolocationService';
 import roleService from './src/services/RoleService';
+import googleSheetsService from './src/services/GoogleSheetsService';
 import { Alert } from 'react-native';
 
 function App(): React.JSX.Element {
@@ -22,6 +23,12 @@ function App(): React.JSX.Element {
         // Инициализируем сервис ролей
         await roleService.initialize();
         console.log('Role service initialized');
+
+        // Initialize Google Sheets service in the background
+        googleSheetsService.initialize().catch(error => {
+          console.error('Failed to initialize Google Sheets service:', error);
+        });
+        console.log('Google Sheets service initialization started');
 
         // Проверяем разрешение на геолокацию
         const hasPermission = await geolocationService.hasLocationPermission();
