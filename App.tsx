@@ -24,11 +24,14 @@ function App(): React.JSX.Element {
         await roleService.initialize();
         console.log('Role service initialized');
 
-        // Initialize Google Sheets service in the background
-        googleSheetsService.initialize().catch(error => {
+        // Initialize Google Sheets service - ждем завершения загрузки
+        try {
+          console.log('Starting Google Sheets service initialization');
+          await googleSheetsService.initialize();
+          console.log('Google Sheets service initialized successfully');
+        } catch (error) {
           console.error('Failed to initialize Google Sheets service:', error);
-        });
-        console.log('Google Sheets service initialization started');
+        }
 
         // Проверяем разрешение на геолокацию
         const hasPermission = await geolocationService.hasLocationPermission();

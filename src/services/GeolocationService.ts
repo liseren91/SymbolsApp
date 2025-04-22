@@ -140,21 +140,30 @@ class GeolocationService {
   // Load points from storage
   async loadPoints() { // Make async
       try {
+          console.log('[GeolocationService] Starting to load points');
+          
           // Load points from local storage
           let localPoints = await StorageService.loadPoints();
-          console.log('[GeolocationService] Points loaded from local storage:', localPoints);
+          console.log('[GeolocationService] Points loaded from local storage:', localPoints.length);
+          console.log('[GeolocationService] Local points sample:', localPoints.slice(0, 2));
           
           // Try to load points from Google Sheets as well
           try {
-              const sheetsPoints = googleSheetsService.getPointsOfInterest();
+              console.log('[GeolocationService] Trying to get points from Google Sheets');
+              const sheetsPoints = await googleSheetsService.getPointsOfInterest(true); // Принудительно обновляем
+              console.log('[GeolocationService] Google Sheets points count:', sheetsPoints?.length || 0);
+              
               if (sheetsPoints && sheetsPoints.length > 0) {
                   console.log('[GeolocationService] Points loaded from Google Sheets:', sheetsPoints.length);
+                  console.log('[GeolocationService] Google Sheets points sample:', sheetsPoints.slice(0, 2));
                   
                   // Combine local points and Google Sheets points
                   // Local points with same ID will be overwritten by Google Sheets points
                   this.pointsOfInterest = [...localPoints, ...sheetsPoints];
+                  console.log('[GeolocationService] Combined points count:', this.pointsOfInterest.length);
               } else {
                   this.pointsOfInterest = localPoints;
+                  console.log('[GeolocationService] No points from Google Sheets, using only local points');
               }
           } catch (sheetsError) {
               console.error('[GeolocationService] Failed to load points from Google Sheets:', sheetsError);

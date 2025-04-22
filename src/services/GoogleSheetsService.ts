@@ -88,13 +88,14 @@ class GoogleSheetsService {
         // Load document properties and sheets
         console.log('[GoogleSheetsService] Loading document info');
         await doc.loadInfo();
+        console.log(`[GoogleSheetsService] Document title: ${doc.title}`);
         
         const sheet = doc.sheetsByIndex[0]; // Get the first sheet
         if (!sheet) {
           throw new Error('No sheets found in the spreadsheet');
         }
         
-        console.log(`[GoogleSheetsService] Found sheet: ${sheet.title}`);
+        console.log(`[GoogleSheetsService] Found sheet: ${sheet.title}, rows: ${sheet.rowCount}, columns: ${sheet.columnCount}`);
         
         // Load all cells in the sheet
         console.log('[GoogleSheetsService] Loading cells');
@@ -105,7 +106,13 @@ class GoogleSheetsService {
         
         // Determine sheet dimensions
         const rowCount = sheet.rowCount;
-        console.log(`[GoogleSheetsService] Processing ${rowCount} rows`);
+        const columnCount = sheet.columnCount;
+        console.log(`[GoogleSheetsService] Processing ${rowCount} rows, ${columnCount} columns`);
+        
+        // Проверяем, есть ли заголовки для широты и долготы
+        console.log(`[GoogleSheetsService] Headers: ${
+          [0, 1, 2, 3, 4].map(col => sheet.getCell(0, col).value?.toString() || 'empty').join(', ')
+        }`);
         
         // Start from row 1 (skip header if present)
         for (let row = 1; row < rowCount; row++) {
@@ -128,6 +135,10 @@ class GoogleSheetsService {
             }
             
             // Check for coordinates and create point of interest
+            const latValue = latitudeCell.value;
+            const longValue = longitudeCell.value;
+            console.log(`[GoogleSheetsService] Row ${row} coord values: latitude=${latValue} (${typeof latValue}), longitude=${longValue} (${typeof longValue})`);
+            
             const latitude = parseFloat(latitudeCell.value?.toString() || '');
             const longitude = parseFloat(longitudeCell.value?.toString() || '');
             const name = nameCell.value?.toString() || symbol; // Use symbol as name if not provided
@@ -143,6 +154,8 @@ class GoogleSheetsService {
               
               pointsOfInterest.push(point);
               console.log(`[GoogleSheetsService] Added POI: "${name}" at ${latitude}, ${longitude}`);
+            } else if (symbol && (latValue !== undefined || longValue !== undefined)) {
+              console.warn(`[GoogleSheetsService] Invalid coordinates for "${symbol}": lat=${latitude}, long=${longitude}`);
             }
           } catch (cellError) {
             console.error(`[GoogleSheetsService] Error processing row ${row}:`, cellError);
@@ -163,6 +176,8 @@ class GoogleSheetsService {
           } catch (storageError) {
             console.error('[GoogleSheetsService] Error saving points to storage:', storageError);
           }
+        } else {
+          console.warn('[GoogleSheetsService] No points of interest found in the spreadsheet!');
         }
       } catch (error) {
         console.error('[GoogleSheetsService] Error fetching data:', error);
@@ -201,16 +216,25 @@ class GoogleSheetsService {
 
   /**
    * Get all points of interest from Google Sheets
+   * @param forceRefresh Принудительно обновить данные из Google Sheets
    * @returns Array of points loaded from Google Sheets
    */
-  getPointsOfInterest(): PointOfInterest[] {
+  async getPointsOfInterest(forceRefresh = false): Promise<PointOfInterest[]> {
+    console.log(`[GoogleSheetsService] getPointsOfInterest called, force: ${forceRefresh}, points: ${this.pointsFromSheets.length}`);
+    
     // Check if we need to refresh the cache
     const now = Date.now();
-    if (now - this.lastFetchTime > this.CACHE_DURATION) {
-      // Refresh in background, don't wait for it
-      this.fetchData().catch(err => {
+    if (forceRefresh || now - this.lastFetchTime > this.CACHE_DURATION || this.pointsFromSheets.length === 0) {
+      // Обновляем данные и ждем результат
+      console.log('[GoogleSheetsService] Refreshing points data');
+      try {
+        await this.fetchData();
+        console.log(`[GoogleSheetsService] Data refreshed, points: ${this.pointsFromSheets.length}`);
+      } catch (err) {
         console.error('[GoogleSheetsService] Failed to refresh points data:', err);
-      });
+      }
+    } else {
+      console.log('[GoogleSheetsService] Using cached points data');
     }
     
     return this.pointsFromSheets;
