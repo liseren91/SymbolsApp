@@ -1,12 +1,35 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator'; // Assuming AppNavigator is in src/navigation
+import googleSheetsService from '../services/GoogleSheetsService';
 
 type AlertScreenProps = StackScreenProps<RootStackParamList, 'Alert'>;
 
 const AlertScreen: React.FC<AlertScreenProps> = ({ navigation, route }) => {
   const { symbol } = route.params; // Get symbol from navigation params
+  const [symbolDescription, setSymbolDescription] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDescription = async () => {
+      try {
+        setIsLoading(true);
+        // Initialize the Google Sheets service if not already initialized
+        await googleSheetsService.initialize();
+        
+        // Get the description for the symbol
+        const description = googleSheetsService.getDescriptionForSymbol(symbol);
+        setSymbolDescription(description);
+      } catch (error) {
+        console.error('Failed to load symbol description:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDescription();
+  }, [symbol]);
 
   const handleDismiss = () => {
     navigation.goBack();
@@ -17,10 +40,20 @@ const AlertScreen: React.FC<AlertScreenProps> = ({ navigation, route }) => {
       <View style={styles.alertBox}>
         <Text style={styles.symbol}>{symbol || '!'}</Text> 
         <Text style={styles.title}>Точка интереса!</Text>
-        <Text style={styles.message}>
-          Вы обнаружили скрытую точку интереса в этом месте. 
-          Обратите внимание на символ выше.
-        </Text>
+        
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
+        ) : symbolDescription ? (
+          <Text style={styles.message}>
+            {symbolDescription}
+          </Text>
+        ) : (
+          <Text style={styles.message}>
+            Вы обнаружили скрытую точку интереса в этом месте. 
+            Обратите внимание на символ выше.
+          </Text>
+        )}
+        
         <TouchableOpacity style={styles.dismissButton} onPress={handleDismiss}>
           <Text style={styles.dismissButtonText}>Понятно</Text>
         </TouchableOpacity>
@@ -66,6 +99,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 25,
     lineHeight: 22,
+  },
+  loader: {
+    marginVertical: 20,
   },
   dismissButton: {
     backgroundColor: '#007AFF',
