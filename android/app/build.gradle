@@ -139,6 +139,13 @@ dependencies {
 
     implementation("androidx.core:core-ktx:${rootProject.ext.androidXCore}")
     implementation("androidx.appcompat:appcompat:${rootProject.ext.androidXAppCompat}")
+
+    // Google Play Services BOM
+    implementation platform('com.google.android.gms:play-services-bom:32.0.0')
+    implementation 'com.google.android.gms:play-services-base'
+    implementation 'com.google.android.gms:play-services-maps'
+    implementation 'com.google.android.gms:play-services-location'
+    implementation 'com.google.maps.android:android-maps-utils:3.8.2'
 }
 
 /**

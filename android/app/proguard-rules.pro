@@ -8,3 +8,7 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# Google Play Services (GMS) rules
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
