@@ -6,6 +6,7 @@ import * as NavigationService from '../navigation/NavigationService'; // Import 
 import ReactNativeHapticFeedback, { HapticFeedbackTypes } from "react-native-haptic-feedback"; // Import Haptic Feedback and type
 import { SettingsStorageService, AppSettings, DEFAULT_SETTINGS } from './SettingsStorageService'; // Import settings
 import googleSheetsService from './GoogleSheetsService'; // Import Google Sheets service
+import notificationService from './NotificationService';
 // TODO: Import navigation functions to show AlertScreen
 // TODO: Import haptic feedback
 
@@ -231,7 +232,14 @@ class GeolocationService {
     console.log(`[GeolocationService] Triggering haptic feedback: ${feedbackType}`);
     ReactNativeHapticFeedback.trigger(feedbackType, options);
     
-    // 2. Navigate to Alert Screen using NavigationService
+    // 2. Send notification
+    notificationService.localNotification(
+      'Символ рядом!', 
+      `Вы приблизились к символу: ${point.symbol} - ${point.name}`,
+      { pointId: point.id, symbol: point.symbol }
+    );
+    
+    // 3. Navigate to Alert Screen using NavigationService
     NavigationService.navigate('Alert', { symbol: point.symbol });
 
     // TODO: Ensure this works correctly in the background

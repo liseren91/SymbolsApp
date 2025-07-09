@@ -13,6 +13,8 @@ import geolocationService from './src/services/GeolocationService';
 import roleService from './src/services/RoleService';
 import googleSheetsService from './src/services/GoogleSheetsService';
 import { Alert } from 'react-native';
+// Импортируем сервис уведомлений
+import notificationService from './src/services/NotificationService';
 
 function App(): React.JSX.Element {
 
@@ -62,6 +64,16 @@ function App(): React.JSX.Element {
     };
 
     initializeApp();
+
+    // Отправляем пробное уведомление при запуске приложения
+    // Это поможет убедиться, что уведомления работают корректно
+    setTimeout(() => {
+      notificationService.localNotification(
+        'Приложение готово к работе',
+        'Уведомления успешно настроены и работают',
+        {}
+      );
+    }, 5000);
 
     // Stop watching when the app unmounts
     return () => {
