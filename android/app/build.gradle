@@ -73,18 +73,38 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
-    ndkVersion rootProject.ext.ndkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
-
     namespace "com.symbolsapp"
+    ndkVersion rootProject.ext.ndkVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
     defaultConfig {
         applicationId "com.symbolsapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        missingDimensionStrategy 'react-native-google-maps', 'none'
     }
+    
+    packagingOptions {
+        // Исключаем нативные библиотеки, которые могут вызвать проблемы
+        exclude "**/libc++_shared.so"
+        exclude "**/libhermes.so"
+        exclude "**/libfolly_json.so"
+        exclude "**/libfbjni.so"
+        exclude "**/libjsi.so"
+        exclude "**/libreactnativejni.so"
+    }
+    
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -124,5 +144,19 @@ dependencies {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
+    }
+
+    implementation("androidx.core:core-ktx:${rootProject.ext.androidXCore}")
+    implementation("androidx.appcompat:appcompat:${rootProject.ext.androidXAppCompat}")
+}
+
+/**
+ * Исключение конфликтующих библиотек
+ */
+configurations.all {
+    resolutionStrategy {
+        force "androidx.core:core:1.13.1"
+        // Явно исключаем старые библиотеки android.support
+        exclude group: 'com.android.support'
     }
 }

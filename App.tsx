@@ -13,6 +13,8 @@ import geolocationService from './src/services/GeolocationService';
 import roleService from './src/services/RoleService';
 import googleSheetsService from './src/services/GoogleSheetsService';
 import { Alert } from 'react-native';
+// Импортируем сервис уведомлений
+import notificationService from './src/services/NotificationService';
 
 function App(): React.JSX.Element {
 
@@ -24,11 +26,14 @@ function App(): React.JSX.Element {
         await roleService.initialize();
         console.log('Role service initialized');
 
-        // Initialize Google Sheets service in the background
-        googleSheetsService.initialize().catch(error => {
+        // Initialize Google Sheets service - ждем завершения загрузки
+        try {
+          console.log('Starting Google Sheets service initialization');
+          await googleSheetsService.initialize();
+          console.log('Google Sheets service initialized successfully');
+        } catch (error) {
           console.error('Failed to initialize Google Sheets service:', error);
-        });
-        console.log('Google Sheets service initialization started');
+        }
 
         // Проверяем разрешение на геолокацию
         const hasPermission = await geolocationService.hasLocationPermission();
@@ -59,6 +64,16 @@ function App(): React.JSX.Element {
     };
 
     initializeApp();
+
+    // Отправляем пробное уведомление при запуске приложения
+    // Это поможет убедиться, что уведомления работают корректно
+    setTimeout(() => {
+      notificationService.localNotification(
+        'Приложение готово к работе',
+        'Уведомления успешно настроены и работают',
+        {}
+      );
+    }, 5000);
 
     // Stop watching when the app unmounts
     return () => {
