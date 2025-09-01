@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: 'com.google.gms.google-services'
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -101,7 +102,6 @@ android {
         exclude "**/libhermes.so"
         exclude "**/libfolly_json.so"
         exclude "**/libfbjni.so"
-        exclude "**/libjsi.so"
         exclude "**/libreactnativejni.so"
     }
     
@@ -148,6 +148,13 @@ dependencies {
 
     implementation("androidx.core:core-ktx:${rootProject.ext.androidXCore}")
     implementation("androidx.appcompat:appcompat:${rootProject.ext.androidXAppCompat}")
+    implementation platform('com.google.firebase:firebase-bom:34.2.0')
+    implementation 'com.google.firebase:firebase-messaging'
+
+    // Используйте точные совместимые версии
+    implementation 'com.google.android.gms:play-services-base:18.0.1'
+    implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    implementation 'com.google.android.gms:play-services-location:19.0.1'
 }
 
 /**
@@ -156,6 +163,9 @@ dependencies {
 configurations.all {
     resolutionStrategy {
         force "androidx.core:core:1.13.1"
+        force 'com.google.android.gms:play-services-base:18.0.1'
+        force 'com.google.android.gms:play-services-maps:18.0.2'
+        force 'com.google.android.gms:play-services-location:19.0.1'
         // Явно исключаем старые библиотеки android.support
         exclude group: 'com.android.support'
     }

@@ -23,7 +23,7 @@
     "react-native-gesture-handler": "^2.25.0",
     "react-native-get-random-values": "^1.11.0",
     "react-native-haptic-feedback": "^2.3.3",
-    "react-native-maps": "^1.14.0",
+    "react-native-maps": "^1.7.1",
     "react-native-push-notification": "^8.1.1",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.10.0",
